@@ -4,6 +4,7 @@ from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from .models import UserProfile
+from .decorators import admin_required, editor_required, role_required
 
 
 def register(request):
@@ -54,3 +55,24 @@ def logout_view(request):
 def home(request):
     profile = UserProfile.objects.get(user=request.user)
     return render(request, 'accounts/dashboard.html', {'profile': profile})
+
+
+@admin_required
+def admin_dashboard(request):
+    """Admin-only dashboard showing all users."""
+    all_users = UserProfile.objects.all()
+    return render(request, 'accounts/admin_dashboard.html', {'users': all_users})
+
+
+@editor_required
+def editor_panel(request):
+    """Editor panel for users with editor or admin role."""
+    profile = UserProfile.objects.get(user=request.user)
+    return render(request, 'accounts/editor_panel.html', {'profile': profile})
+
+
+@login_required
+def profile_view(request):
+    """View current user's profile."""
+    profile = UserProfile.objects.get(user=request.user)
+    return render(request, 'accounts/profile.html', {'profile': profile})
