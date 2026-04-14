@@ -64,28 +64,3 @@ def logout_view(request):
 def home(request):
     profile = UserProfile.objects.get(user=request.user)
     return render(request, 'accounts/dashboard.html', {'profile': profile})
-
-
-def logout_view(request):
-    if request.method == "POST":
-        logout(request)
-
-        messages.success(
-            request,
-            "You have been logged out.",
-        )
-
-    return redirect("login")
-
-
-@login_required
-def home(request):
-    profile = UserProfile.objects.get(
-        user=request.user,
-    )
-
-    return render(
-        request,
-        "accounts/dashboard.html",
-        {"profile": profile},
-    )
