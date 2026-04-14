@@ -1,0 +1,20 @@
+# CODEOWNERS – define who must review changes to sensitive areas
+#
+# SSDLC principle: mandatory code review for security-critical files.
+# GitHub enforces these reviews before a PR can be merged.
+#
+# Format: <pattern>  <owner> [<owner> …]
+# Docs: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Security configuration – security team must review any changes
+.github/workflows/           @Pelino-Courses/security
+.github/dependabot.yml       @Pelino-Courses/security
+SECURITY.md                  @Pelino-Courses/security
+config.py                    @Pelino-Courses/security
+
+# Core application – any change to the auth layer requires review
+app/auth.py                  @Pelino-Courses/security @Pelino-Courses/developers
+app/models.py                @Pelino-Courses/security @Pelino-Courses/developers
+
+# Everything else – any repo member can review
+*                            @Pelino-Courses/developers

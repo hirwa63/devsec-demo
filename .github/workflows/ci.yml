@@ -1,0 +1,79 @@
+name: CI – Lint, Test & Security Audit
+
+on:
+  push:
+    branches: ["main", "copilot/**"]
+  pull_request:
+    branches: ["main"]
+
+permissions:
+  contents: read
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Lint
+  # ---------------------------------------------------------------------------
+  lint:
+    name: Lint (flake8 + bandit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dev dependencies
+        run: pip install -r requirements-dev.txt
+
+      - name: flake8 – style & logic errors
+        run: flake8 app/ config.py run.py --max-line-length=100
+
+      - name: bandit – static security analysis
+        run: bandit -r app/ -ll
+
+  # ---------------------------------------------------------------------------
+  # Test
+  # ---------------------------------------------------------------------------
+  test:
+    name: Test (pytest)
+    runs-on: ubuntu-latest
+    needs: lint
+    env:
+      SECRET_KEY: ci-test-secret-key-not-for-production
+      FLASK_ENV: testing
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dev dependencies
+        run: pip install -r requirements-dev.txt
+
+      - name: Run tests with coverage
+        run: pytest --cov=app --cov-report=term-missing --cov-fail-under=70
+
+  # ---------------------------------------------------------------------------
+  # Dependency audit
+  # ---------------------------------------------------------------------------
+  audit:
+    name: Dependency Audit (pip-audit)
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install pip-audit
+        run: pip install pip-audit
+
+      - name: Audit runtime dependencies for known CVEs
+        run: pip-audit -r requirements.txt

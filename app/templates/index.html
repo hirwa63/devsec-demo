@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}My Notes – SecureNotes{% endblock %}
+{% block content %}
+<h2>My Notes</h2>
+<a href="{{ url_for('main.new_note') }}" class="btn">+ New Note</a>
+<br><br>
+{% if notes %}
+  {% for note in notes %}
+  <div class="card">
+    <h3><a href="{{ url_for('main.view_note', note_id=note.id) }}">{{ note.title }}</a></h3>
+    <small>Last updated: {{ note.updated_at.strftime('%Y-%m-%d %H:%M') }} UTC</small>
+    <p>{{ note.content[:200] }}{% if note.content|length > 200 %}…{% endif %}</p>
+    <a href="{{ url_for('main.edit_note', note_id=note.id) }}" class="btn">Edit</a>
+    <form method="POST" action="{{ url_for('main.delete_note', note_id=note.id) }}" style="display:inline">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit" class="danger" onclick="return confirm('Delete this note?')">Delete</button>
+    </form>
+  </div>
+  {% endfor %}
+{% else %}
+  <p>No notes yet. <a href="{{ url_for('main.new_note') }}">Create your first note.</a></p>
+{% endif %}
+{% endblock %}
