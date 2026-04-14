@@ -15,6 +15,7 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
+<<<<<<< HEAD
             name="UserProfile",
             fields=[
                 (
@@ -46,6 +47,14 @@ class Migration(migrations.Migration):
                         to=settings.AUTH_USER_MODEL,
                     ),
                 ),
+=======
+            name='UserProfile',
+            fields=[
+                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('role', models.CharField(choices=[('admin', 'Admin'), ('editor', 'Editor'), ('viewer', 'Viewer')], default='viewer', max_length=50)),
+                ('created_at', models.DateTimeField(auto_now_add=True)),
+                ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
+>>>>>>> 81d5325699351fc300714857a50f2e052ebfbb55
             ],
         ),
     ]

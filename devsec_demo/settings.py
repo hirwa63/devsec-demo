@@ -6,6 +6,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Load environment variables from .env
 load_dotenv(os.path.join(BASE_DIR, '.env'))
+<<<<<<< HEAD
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv(
@@ -16,6 +17,14 @@ SECRET_KEY = os.getenv(
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
+=======
+
+SECRET_KEY = os.getenv('SECRET_KEY')
+DEBUG = os.getenv('DEBUG') == 'True'
+
+SECRET_KEY = 'django-insecure-any-key-here'
+DEBUG = True
+>>>>>>> 81d5325699351fc300714857a50f2e052ebfbb55
 ALLOWED_HOSTS = ['*']
 
 INSTALLED_APPS = [
@@ -25,7 +34,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+<<<<<<< HEAD
     'accounts', # MUST BE HERE
+=======
+    'accounts', 
+>>>>>>> 81d5325699351fc300714857a50f2e052ebfbb55
 ]
 
 MIDDLEWARE = [
