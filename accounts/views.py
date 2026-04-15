@@ -9,7 +9,7 @@ from .decorators import admin_required, editor_required
 
 def register(request):
     if request.user.is_authenticated:
-        return redirect('home')
+        return redirect('profile')
     if request.method == 'POST':
         form = UserCreationForm(request.POST)
         if form.is_valid():
@@ -27,7 +27,7 @@ def register(request):
 
 def login_view(request):
     if request.user.is_authenticated:
-        return redirect('home')
+        return redirect('profile')
     if request.method == 'POST':
         form = AuthenticationForm(request, data=request.POST)
         if form.is_valid():
@@ -91,7 +91,7 @@ def profile_view_by_id(request, user_id):
         profile = UserProfile.objects.get(user_id=user_id)
     except UserProfile.DoesNotExist:
         messages.error(request, 'User profile not found.')
-        return redirect('home')
+        return redirect('profile')
     
     # IDOR Protection: Check if current user owns this profile or is admin
     is_own_profile = request.user.id == user_id
@@ -99,6 +99,6 @@ def profile_view_by_id(request, user_id):
     
     if not (is_own_profile or is_admin):
         messages.error(request, 'You do not have permission to view this profile.')
-        return redirect('home')
+        return redirect('profile')
     
     return render(request, 'accounts/profile.html', {'profile': profile})
