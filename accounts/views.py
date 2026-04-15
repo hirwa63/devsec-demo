@@ -4,7 +4,7 @@ from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from .models import UserProfile
-from .decorators import admin_required, editor_required, role_required
+from .decorators import admin_required, editor_required
 
 
 def register(request):
