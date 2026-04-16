@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <<<<<<< HEAD
+<<<<<<< HEAD
 <head>
     <title>Register</title>
     <style>
@@ -11,6 +12,9 @@
         a { color: #007bff; text-decoration: none; }
     </style>
 </head>
+=======
+<head><title>Register</title></head>
+>>>>>>> assignment/add-auth-audit-logging
 <body>
     <h1>Register</h1>
     {% if messages %}
@@ -18,6 +22,7 @@
             <p>{{ message }}</p>
         {% endfor %}
     {% endif %}
+<<<<<<< HEAD
 
     <div class="form-card">
         <form method="post">
@@ -45,5 +50,13 @@
     </form>
     <p><a href="{% url 'login' %}?next={{ next }}">Login</a></p>
 >>>>>>> assignment/fix-open-redirects
+=======
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Register</button>
+    </form>
+    <p><a href="{% url 'login' %}">Login</a></p>
+>>>>>>> assignment/add-auth-audit-logging
 </body>
 </html>

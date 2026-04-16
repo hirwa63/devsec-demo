@@ -1,20 +1,14 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.conf import settings
 from django.http import JsonResponse
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.utils.http import url_has_allowed_host_and_scheme
-from .models import UserProfile, LoginAttempt
-
-def get_client_ip(request):
-    """Extract the client IP address from the request."""
-    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
-    if x_forwarded_for:
-        return x_forwarded_for.split(',')[0].strip()
-    return request.META.get('REMOTE_ADDR')
+from .models import UserProfile, LoginAttempt, AuditLog
+from .utils import record_audit_log, get_client_ip
 
 def get_safe_redirect_url(request, redirect_to, fallback_url):
     """
@@ -39,6 +33,10 @@ def register(request):
         if form.is_valid():
             user = form.save()
             UserProfile.objects.create(user=user, role='viewer')
+            
+            # AUDIT LOG: Registration
+            record_audit_log('registration', request, user=user, details="New user created")
+            
             username = form.cleaned_data.get('username')
             messages.success(request, f'Account created for {username}! Please login.')
             
@@ -89,6 +87,10 @@ def login_view(request):
                 login(request, user)
                 # Clear failed attempts on successful login
                 LoginAttempt.clear_attempts(username)
+                
+                # AUDIT LOG: Login Success
+                record_audit_log('login_success', request, user=user)
+                
                 messages.success(request, f'Welcome back, {username}!')
                 
                 safe_url = get_safe_redirect_url(request, redirect_to, 'profile')
@@ -96,6 +98,10 @@ def login_view(request):
 
         # Authentication failed — record the attempt
         LoginAttempt.record_failure(username, ip_address)
+        
+        # AUDIT LOG: Login Failure
+        record_audit_log('login_failure', request, username_attempted=username, details="Invalid credentials")
+        
         remaining = max_attempts - LoginAttempt.get_recent_failures(username, cooldown_minutes)
 
         if remaining <= 0:
@@ -119,7 +125,13 @@ def login_view(request):
 
 def logout_view(request):
     if request.method == 'POST':
+        user = request.user
         logout(request)
+        
+        # AUDIT LOG: Logout
+        if user.is_authenticated:
+            record_audit_log('logout', request, user=user)
+            
         messages.success(request, 'You have been logged out.')
     return redirect('login')
 
@@ -132,9 +144,11 @@ def home(request):
 @login_required
 @ensure_csrf_cookie
 def profile_view(request):
-    """View current user's profile."""
+    """View current user's profile with recent security logs."""
     profile, created = UserProfile.objects.get_or_create(user=request.user)
-    return render(request, 'accounts/profile.html', {'profile': profile})
+    # Include recent audit logs for the user
+    logs = AuditLog.objects.filter(user=request.user)[:10]
+    return render(request, 'accounts/profile.html', {'profile': profile, 'logs': logs})
 
 @login_required
 def update_display_name(request):
@@ -146,3 +160,33 @@ def update_display_name(request):
         profile.save()
         return JsonResponse({'status': 'success', 'display_name': display_name})
     return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
+
+def is_admin(user):
+    return hasattr(user, 'userprofile') and user.userprofile.role == 'admin'
+
+@login_required
+@user_passes_test(is_admin)
+def update_role(request, user_id):
+    """Admin-only view to change user roles with audit logging."""
+    from django.contrib.auth.models import User
+    target_user = get_object_or_404(User, pk=user_id)
+    target_profile, created = UserProfile.objects.get_or_create(user=target_user)
+    
+    if request.method == 'POST':
+        old_role = target_profile.role
+        new_role = request.POST.get('role')
+        if new_role in [choice[0] for choice in UserProfile.ROLE_CHOICES]:
+            target_profile.role = new_role
+            target_profile.save()
+            
+            # AUDIT LOG: Privilege Change
+            record_audit_log(
+                'privilege_change', 
+                request, 
+                user=request.user, 
+                details=f"Changed user {target_user.username} role: {old_role} -> {new_role}"
+            )
+            
+            messages.success(request, f"Updated {target_user.username} to {new_role}")
+    
+    return redirect('profile')

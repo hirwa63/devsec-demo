@@ -1,6 +1,5 @@
 from django.db import models
 from django.contrib.auth.models import User
-<<<<<<< HEAD
 from django.utils import timezone
 
 class UserProfile(models.Model):
@@ -33,7 +32,6 @@ class LoginAttempt(models.Model):
 
     @classmethod
     def get_recent_failures(cls, username, cooldown_minutes):
-        """Get the count of failed login attempts within the cooldown window."""
         cutoff_time = timezone.now() - timezone.timedelta(minutes=cooldown_minutes)
         return cls.objects.filter(
             username=username,
@@ -42,17 +40,33 @@ class LoginAttempt(models.Model):
 
     @classmethod
     def record_failure(cls, username, ip_address=None):
-        """Record a failed login attempt."""
         cls.objects.create(username=username, ip_address=ip_address)
 
     @classmethod
     def clear_attempts(cls, username):
-        """Clear all failed login attempts for a user after successful login."""
         cls.objects.filter(username=username).delete()
-=======
 
-class UserProfile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='userprofile')
+class AuditLog(models.Model):
+    """Model for persistent audit logging of security-relevant events."""
+    EVENT_TYPES = [
+        ('registration', 'User Registration'),
+        ('login_success', 'Login Success'),
+        ('login_failure', 'Login Failure'),
+        ('logout', 'User Logout'),
+        ('privilege_change', 'Privilege Change'),
+        ('password_change', 'Password Change'),
+    ]
+    
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    event_type = models.CharField(max_length=20, choices=EVENT_TYPES)
+    username_attempted = models.CharField(max_length=150, blank=True)
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    details = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ['-timestamp']
+
     def __str__(self):
-        return self.user.username
->>>>>>> assignment/fix-open-redirects
+        user_part = self.user.username if self.user else self.username_attempted or "Anonymous"
+        return f"[{self.timestamp}] {self.event_type}: {user_part}"

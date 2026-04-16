@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <<<<<<< HEAD
+<<<<<<< HEAD
 <head>
     <title>Login</title>
     <style>
@@ -15,10 +16,14 @@
         .locked-notice { background-color: #f8d7da; border: 2px solid #dc3545; padding: 15px; border-radius: 5px; margin-bottom: 15px; }
     </style>
 </head>
+=======
+<head><title>Login</title></head>
+>>>>>>> assignment/add-auth-audit-logging
 <body>
     <h1>Login</h1>
     {% if messages %}
         {% for message in messages %}
+<<<<<<< HEAD
             {% if message.tags == 'error' %}
                 <div class="alert-error">{{ message }}</div>
             {% elif message.tags == 'warning' %}
@@ -62,5 +67,16 @@
     </form>
     <p><a href="{% url 'register' %}?next={{ next }}">Register</a></p>
 >>>>>>> assignment/fix-open-redirects
+=======
+            <p style="color: red;">{{ message }}</p>
+        {% endfor %}
+    {% endif %}
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Login</button>
+    </form>
+    <p><a href="{% url 'register' %}">Register</a></p>
+>>>>>>> assignment/add-auth-audit-logging
 </body>
 </html>

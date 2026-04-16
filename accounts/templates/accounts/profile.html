@@ -1,14 +1,16 @@
 <!DOCTYPE html>
 <html>
-<<<<<<< HEAD
 <head>
     <title>Profile</title>
     <style>
         body { font-family: Arial; max-width: 600px; margin: 50px auto; }
-        .profile-card { border: 1px solid #ddd; padding: 20px; border-radius: 5px; }
+        .profile-card { border: 1px solid #ddd; padding: 20px; border-radius: 5px; margin-bottom: 20px; }
         button { background-color: #007bff; color: white; border: none; padding: 10px 15px; cursor: pointer; }
         a { color: #007bff; text-decoration: none; }
-        .edit-section { margin-top: 20px; padding-top: 20px; border-top: 1px dashed #ccc; }
+        .edit-section { padding-top: 20px; border-top: 1px dashed #ccc; }
+        .log-section { margin-top: 30px; }
+        .log-list { list-style: none; padding: 0; font-size: 0.9em; }
+        .log-item { padding: 5px 0; border-bottom: 1px solid #eee; }
     </style>
 </head>
 <body>
@@ -18,18 +20,31 @@
         <p><strong>Role:</strong> {{ profile.role }}</p>
         <p><strong>Display Name:</strong> <span id="display-name-val">{{ profile.display_name|default:"Not set" }}</span></p>
         <p><strong>Account Created:</strong> {{ profile.created_at }}</p>
+        
+        <!-- AJAX PROFILE UPDATE -->
+        <div class="edit-section">
+            <h3>Update Display Name (AJAX)</h3>
+            <input type="text" id="new-display-name" placeholder="Enter new name" style="padding: 8px; width: 200px;">
+            <button onclick="updateDisplayName()">Update</button>
+            <p id="status-msg"></p>
+        </div>
     </div>
 
-    <!-- AJAX PROFILE UPDATE (CSRF TEST) -->
-    <div class="profile-card edit-section">
-        <h3>Update Display Name (AJAX)</h3>
-        <input type="text" id="new-display-name" placeholder="Enter new name" style="padding: 8px; width: 200px;">
-        <button onclick="updateDisplayName()">Update</button>
-        <p id="status-msg"></p>
+    <div class="profile-card log-section">
+        <h3>Recent Security Activity</h3>
+        <ul class="log-list">
+            {% for log in logs %}
+                <li class="log-item">
+                    <strong>[{{ log.timestamp|date:"Y-m-d H:i" }}]</strong> 
+                    {{ log.get_event_type_display }}: {{ log.details }}
+                </li>
+            {% empty %}
+                <li>No activity recorded.</li>
+            {% endfor %}
+        </ul>
     </div>
 
     <script>
-        // Helper to get CSRF token from cookies
         function getCookie(name) {
             let cookieValue = null;
             if (document.cookie && document.cookie !== '') {
@@ -49,7 +64,6 @@
             const nameInput = document.getElementById('new-display-name');
             const statusMsg = document.getElementById('status-msg');
             const nameVal = nameInput.value;
-            
             const csrftoken = getCookie('csrftoken');
 
             try {
@@ -85,14 +99,5 @@
             <button type="submit" style="background-color: #dc3545;">Logout</button>
         </form>
     </div>
-=======
-<head><title>Profile</title></head>
-<body>
-    <h1>Welcome to your profile</h1>
-    <form method="post" action="{% url 'logout' %}">
-        {% csrf_token %}
-        <button type="submit">Logout</button>
-    </form>
->>>>>>> assignment/fix-open-redirects
 </body>
 </html>
