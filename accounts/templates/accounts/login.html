@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login</title>
+    <style>
+        body { font-family: Arial; max-width: 600px; margin: 50px auto; }
+        .form-card { border: 1px solid #ddd; padding: 20px; border-radius: 5px; }
+        input { display: block; margin: 10px 0; padding: 8px; width: 95%; }
+        button { background-color: #007bff; color: white; border: none; padding: 10px 15px; cursor: pointer; }
+        a { color: #007bff; text-decoration: none; }
+        .alert-error { background-color: #f8d7da; color: #721c24; padding: 10px; border-radius: 5px; margin-bottom: 15px; }
+        .alert-warning { background-color: #fff3cd; color: #856404; padding: 10px; border-radius: 5px; margin-bottom: 15px; }
+        .alert-success { background-color: #d4edda; color: #155724; padding: 10px; border-radius: 5px; margin-bottom: 15px; }
+        .locked-notice { background-color: #f8d7da; border: 2px solid #dc3545; padding: 15px; border-radius: 5px; margin-bottom: 15px; }
+    </style>
+</head>
+<body>
+    <h1>Login</h1>
+    {% if messages %}
+        {% for message in messages %}
+            {% if message.tags == 'error' %}
+                <div class="alert-error">{{ message }}</div>
+            {% elif message.tags == 'warning' %}
+                <div class="alert-warning">{{ message }}</div>
+            {% elif message.tags == 'success' %}
+                <div class="alert-success">{{ message }}</div>
+            {% endif %}
+        {% endfor %}
+    {% endif %}
+
+    {% if is_locked %}
+        <div class="locked-notice">
+            <strong>Account Temporarily Locked</strong>
+            <p>Too many failed login attempts. Please wait {{ cooldown_minutes }} minutes before trying again.</p>
+        </div>
+    {% endif %}
+
+    <div class="form-card">
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit">Login</button>
+        </form>
+    </div>
+
+    <div style="margin-top: 15px;">
+        <a href="{% url 'register' %}">Don't have an account? Register</a>
+    </div>
+</body>
+</html>
