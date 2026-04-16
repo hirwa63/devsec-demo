@@ -23,13 +23,17 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'dev-key-insecure-do-not-use-in-production')
+# Strictly required in production (when DEBUG=False)
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
+if not SECRET_KEY and os.environ.get('DJANGO_DEBUG', 'False').lower() != 'true':
+    raise ValueError("DJANGO_SECRET_KEY must be set in production environments.")
+# Fallback for local development ONLY
+SECRET_KEY = SECRET_KEY or 'django-insecure-fallback-key-for-local-dev-only'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DJANGO_DEBUG', 'True') == 'True'
+DEBUG = os.environ.get('DJANGO_DEBUG', 'False').lower() == 'true'
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
+ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', '127.0.0.1,localhost').split(',')
 
 
 # Application definition
@@ -136,3 +140,29 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 # Security: Limit upload size to 10MB to prevent DoS
 DATA_UPLOAD_MAX_MEMORY_SIZE = 10485760 
+
+# --- PRODUCTION SECURITY SETTINGS ---
+
+if not DEBUG:
+    # HTTPS & Transport Security
+    SECURE_SSL_REDIRECT = os.environ.get('DJANGO_SECURE_SSL_REDIRECT', 'True').lower() == 'true'
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    
+    # HSTS (HTTP Strict Transport Security)
+    SECURE_HSTS_SECONDS = 31536000 # 1 year
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    
+    # Cookie & CSRF Security
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SESSION_COOKIE_HTTPONLY = True
+    CSRF_COOKIE_HTTPONLY = True # Django 4.1+
+    
+    # Browser-side Protection
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    SECURE_BROWSER_XSS_FILTER = True # For older browsers
+    X_FRAME_OPTIONS = 'DENY'
+else:
+    # Development-friendly overrides
+    X_FRAME_OPTIONS = 'SAMEORIGIN'
