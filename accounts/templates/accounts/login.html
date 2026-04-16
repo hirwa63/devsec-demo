@@ -2,6 +2,7 @@
 <html>
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 <head>
     <title>Login</title>
     <style>
@@ -19,10 +20,14 @@
 =======
 <head><title>Login</title></head>
 >>>>>>> assignment/add-auth-audit-logging
+=======
+<head><title>Login</title></head>
+>>>>>>> assignment/fix-stored-xss-profile-content
 <body>
     <h1>Login</h1>
     {% if messages %}
         {% for message in messages %}
+<<<<<<< HEAD
 <<<<<<< HEAD
             {% if message.tags == 'error' %}
                 <div class="alert-error">{{ message }}</div>
@@ -69,6 +74,9 @@
 >>>>>>> assignment/fix-open-redirects
 =======
             <p style="color: red;">{{ message }}</p>
+=======
+            <p>{{ message }}</p>
+>>>>>>> assignment/fix-stored-xss-profile-content
         {% endfor %}
     {% endif %}
     <form method="post">
@@ -77,6 +85,9 @@
         <button type="submit">Login</button>
     </form>
     <p><a href="{% url 'register' %}">Register</a></p>
+<<<<<<< HEAD
 >>>>>>> assignment/add-auth-audit-logging
+=======
+>>>>>>> assignment/fix-stored-xss-profile-content
 </body>
 </html>

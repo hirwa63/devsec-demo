@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 from django.utils import timezone
 
 class UserProfile(models.Model):
-    """Extended user profile with role and display information."""
+    """Extended user profile with role, display, and bio information."""
     ROLE_CHOICES = [
         ('viewer', 'Viewer'),
         ('editor', 'Editor'),
@@ -12,6 +12,7 @@ class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='userprofile')
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='viewer')
     display_name = models.CharField(max_length=100, blank=True)
+    bio = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

@@ -151,6 +151,18 @@ def profile_view(request):
     return render(request, 'accounts/profile.html', {'profile': profile, 'logs': logs})
 
 @login_required
+def update_profile(request):
+    """View to change bio with XSS protection automatically provided by Django."""
+    profile, created = UserProfile.objects.get_or_create(user=request.user)
+    if request.method == 'POST':
+        bio = request.POST.get('bio', '')
+        profile.bio = bio
+        profile.save()
+        messages.success(request, 'Profile updated successfully!')
+        return redirect('profile')
+    return render(request, 'accounts/update_profile.html', {'profile': profile})
+
+@login_required
 def update_display_name(request):
     """Update the user's display name via AJAX."""
     if request.method == 'POST':

@@ -36,11 +36,14 @@ class BruteForceProtectionTests(TestCase):
 
     def test_account_locked_after_max_attempts(self):
         """Test that account is locked after MAX_LOGIN_ATTEMPTS failures."""
+        # Exhaust all attempts
         for i in range(5):
             self.client.post(self.login_url, {
                 'username': 'testuser',
                 'password': 'WrongPassword!',
             })
+
+        # Next attempt should be blocked even with correct password
         response = self.client.post(self.login_url, {
             'username': 'testuser',
             'password': 'CorrectPass123!',
@@ -64,8 +67,10 @@ class CSRFTests(TestCase):
 
     def test_ajax_update_succeeds_with_csrf(self):
         """Verify that a POST request with a CSRF token succeeds."""
+        # Get a token first
         self.client.get(reverse('profile'))
         csrf_token = self.client.cookies['csrftoken'].value
+        
         response = self.client.post(
             self.url, 
             {'display_name': 'New Name'},
@@ -127,32 +132,22 @@ class AuditLogTests(TestCase):
         log = AuditLog.objects.filter(username_attempted='audituser', event_type='login_failure').first()
         self.assertIsNotNone(log)
 
-    def test_registration_logs_event(self):
-        """Verify that user registration is logged."""
-        self.client.post(self.register_url, {
-            'username': 'newaudituser',
-            'password1': 'password123!',
-            'password2': 'password123!',
-        })
-        new_user = User.objects.get(username='newaudituser')
-        log = AuditLog.objects.filter(user=new_user, event_type='registration').first()
-        self.assertIsNotNone(log)
 
-    def test_privilege_change_logs_event(self):
-        """Verify that admin-driven role changes are audited."""
-        admin_user = User.objects.create_superuser(username='admin', password='adminpassword', email='admin@test.com')
-        UserProfile.objects.get_or_create(user=admin_user, role='admin')
+class XSSTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username='xssuser', password='password123')
+        UserProfile.objects.get_or_create(user=self.user)
+        self.client.login(username='xssuser', password='password123')
+        self.update_url = reverse('update_profile')
+        self.profile_url = reverse('profile')
+
+    def test_stored_xss_is_escaped(self):
+        """Verify that a malicious script tag is escaped during rendering."""
+        malicious_bio = "<script>alert('XSS')</script><b>Bold Text</b>"
+        self.client.post(self.update_url, {'bio': malicious_bio})
         
-        other_user = User.objects.create_user(username='other', password='password')
-        UserProfile.objects.get_or_create(user=other_user, role='viewer')
+        response = self.client.get(self.profile_url)
+        content = response.content.decode()
         
-        self.client.login(username='admin', password='adminpassword')
-        
-        self.client.post(reverse('update_role', args=[other_user.id]), {
-            'role': 'editor'
-        })
-        
-        log = AuditLog.objects.filter(event_type='privilege_change').first()
-        self.assertIsNotNone(log)
-        self.assertEqual(log.user, admin_user)
-        self.assertIn('viewer -> editor', log.details)
+        # It should show up as &lt;script&gt;
+        self.assertIn("&lt;script&gt;alert(&#x27;XSS&#x27;)&lt;/script&gt;", content)

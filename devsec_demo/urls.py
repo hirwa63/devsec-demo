@@ -2,11 +2,14 @@ from django.urls import path, include
 from django.contrib import admin
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 from django.urls import path, include
 =======
 >>>>>>> assignment/fix-open-redirects
 =======
 >>>>>>> assignment/add-auth-audit-logging
+=======
+>>>>>>> assignment/fix-stored-xss-profile-content
 from django.views.generic import RedirectView
 
 urlpatterns = [
