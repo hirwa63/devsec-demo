@@ -4,8 +4,9 @@ from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.conf import settings
+from django.http import JsonResponse
+from django.views.decorators.csrf import ensure_csrf_cookie
 from .models import UserProfile, LoginAttempt
-
 
 def get_client_ip(request):
     """Extract the client IP address from the request."""
@@ -13,7 +14,6 @@ def get_client_ip(request):
     if x_forwarded_for:
         return x_forwarded_for.split(',')[0].strip()
     return request.META.get('REMOTE_ADDR')
-
 
 def register(request):
     if request.user.is_authenticated:
@@ -32,18 +32,8 @@ def register(request):
         form = UserCreationForm()
     return render(request, 'accounts/register.html', {'form': form})
 
-
 def login_view(request):
-    """Login view with brute-force protection.
-
-    Security design:
-    - Tracks failed login attempts per username using the LoginAttempt model.
-    - After MAX_LOGIN_ATTEMPTS failures within LOGIN_COOLDOWN_MINUTES, the
-      account is temporarily locked out.
-    - On successful login, all previous failed attempts are cleared.
-    - The lockout message does NOT reveal whether the username exists,
-      it simply states the account is temporarily locked.
-    """
+    """Login view with brute-force protection."""
     if request.user.is_authenticated:
         return redirect('profile')
 
@@ -80,7 +70,7 @@ def login_view(request):
                 # Clear failed attempts on successful login
                 LoginAttempt.clear_attempts(username)
                 messages.success(request, f'Welcome back, {username}!')
-                return redirect('home')
+                return redirect('profile')
 
         # Authentication failed — record the attempt
         LoginAttempt.record_failure(username, ip_address)
@@ -105,22 +95,32 @@ def login_view(request):
 
     return render(request, 'accounts/login.html', {'form': form})
 
-
 def logout_view(request):
     if request.method == 'POST':
         logout(request)
         messages.success(request, 'You have been logged out.')
     return redirect('login')
 
-
 @login_required
+@ensure_csrf_cookie
 def home(request):
     profile = UserProfile.objects.get(user=request.user)
     return render(request, 'accounts/dashboard.html', {'profile': profile})
 
-
 @login_required
+@ensure_csrf_cookie
 def profile_view(request):
     """View current user's profile."""
-    profile = UserProfile.objects.get(user=request.user)
+    profile, created = UserProfile.objects.get_or_create(user=request.user)
     return render(request, 'accounts/profile.html', {'profile': profile})
+
+@login_required
+def update_display_name(request):
+    """Update the user's display name via AJAX."""
+    if request.method == 'POST':
+        display_name = request.POST.get('display_name', '')
+        profile = request.user.userprofile
+        profile.display_name = display_name
+        profile.save()
+        return JsonResponse({'status': 'success', 'display_name': display_name})
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)

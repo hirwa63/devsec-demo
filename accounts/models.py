@@ -2,9 +2,8 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
 
-
 class UserProfile(models.Model):
-    """Extended user profile with role information."""
+    """Extended user profile with role and display information."""
     ROLE_CHOICES = [
         ('viewer', 'Viewer'),
         ('editor', 'Editor'),
@@ -12,6 +11,7 @@ class UserProfile(models.Model):
     ]
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='userprofile')
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='viewer')
+    display_name = models.CharField(max_length=100, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -19,13 +19,7 @@ class UserProfile(models.Model):
 
 
 class LoginAttempt(models.Model):
-    """Tracks failed login attempts for brute-force protection.
-
-    This model records each failed login attempt per username, allowing
-    the system to enforce lockout after a configurable number of failures.
-    The design uses username-based tracking rather than IP-based to prevent
-    attackers from guessing passwords from different IPs.
-    """
+    """Tracks failed login attempts for brute-force protection."""
     username = models.CharField(max_length=150, db_index=True)
     ip_address = models.GenericIPAddressField(null=True, blank=True)
     timestamp = models.DateTimeField(auto_now_add=True)
