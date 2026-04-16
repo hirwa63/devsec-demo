@@ -1,9 +1,24 @@
+import uuid
+import os
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
+from .validators import validate_max_file_size, validate_image_extension, validate_document_extension
+
+def avatar_upload_path(instance, filename):
+    """Rename avatar to UUID to prevent path traversal and collisions."""
+    ext = filename.split('.')[-1]
+    filename = f"{uuid.uuid4()}.{ext}"
+    return os.path.join('avatars/', filename)
+
+def doc_upload_path(instance, filename):
+    """Rename document to UUID."""
+    ext = filename.split('.')[-1]
+    filename = f"{uuid.uuid4()}.{ext}"
+    return os.path.join('documents/', filename)
 
 class UserProfile(models.Model):
-    """Extended user profile with role, display, and bio information."""
+    """Extended user profile with role, display, bio, and media upload information."""
     ROLE_CHOICES = [
         ('viewer', 'Viewer'),
         ('editor', 'Editor'),
@@ -13,6 +28,16 @@ class UserProfile(models.Model):
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='viewer')
     display_name = models.CharField(max_length=100, blank=True)
     bio = models.TextField(blank=True)
+    avatar = models.ImageField(
+        upload_to=avatar_upload_path, 
+        validators=[validate_max_file_size, validate_image_extension],
+        null=True, blank=True
+    )
+    document = models.FileField(
+        upload_to=doc_upload_path,
+        validators=[validate_max_file_size, validate_document_extension],
+        null=True, blank=True
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

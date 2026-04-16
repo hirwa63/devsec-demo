@@ -129,3 +129,10 @@ LOGIN_URL = 'login'
 MAX_LOGIN_ATTEMPTS = 5
 # Lockout cooldown period in minutes
 LOGIN_COOLDOWN_MINUTES = 15
+
+# Media files (Uploads)
+MEDIA_URL = 'media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
+# Security: Limit upload size to 10MB to prevent DoS
+DATA_UPLOAD_MAX_MEMORY_SIZE = 10485760 

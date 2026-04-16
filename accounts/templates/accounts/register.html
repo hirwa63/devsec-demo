@@ -3,6 +3,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 <head>
     <title>Register</title>
     <style>
@@ -42,12 +43,15 @@
 =======
 =======
 >>>>>>> assignment/fix-stored-xss-profile-content
+=======
+>>>>>>> assignment/secure-file-upload-handling
 <head><title>Register</title></head>
 <body>
     <h1>Register</h1>
     <form method="post">
         {% csrf_token %}
         {{ form.as_p }}
+<<<<<<< HEAD
 <<<<<<< HEAD
         <input type="hidden" name="next" value="{{ next }}">
         <button type="submit">Register</button>
@@ -67,5 +71,10 @@
     </form>
     <p><a href="{% url 'login' %}">Login</a></p>
 >>>>>>> assignment/fix-stored-xss-profile-content
+=======
+        <button type="submit">Register</button>
+    </form>
+    <p><a href="{% url 'login' %}">Login</a></p>
+>>>>>>> assignment/secure-file-upload-handling
 </body>
 </html>

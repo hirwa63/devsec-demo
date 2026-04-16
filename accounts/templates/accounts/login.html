@@ -3,6 +3,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 <head>
     <title>Login</title>
     <style>
@@ -61,12 +62,15 @@
         <a href="{% url 'register' %}">Don't have an account? Register</a>
     </div>
 =======
+=======
+>>>>>>> assignment/secure-file-upload-handling
 <head><title>Login</title></head>
 <body>
     <h1>Login</h1>
     <form method="post">
         {% csrf_token %}
         {{ form.as_p }}
+<<<<<<< HEAD
         <input type="hidden" name="next" value="{{ next }}">
         <button type="submit">Login</button>
     </form>
@@ -89,5 +93,10 @@
 >>>>>>> assignment/add-auth-audit-logging
 =======
 >>>>>>> assignment/fix-stored-xss-profile-content
+=======
+        <button type="submit">Login</button>
+    </form>
+    <p><a href="{% url 'register' %}">Register</a></p>
+>>>>>>> assignment/secure-file-upload-handling
 </body>
 </html>

@@ -152,14 +152,29 @@ def profile_view(request):
 
 @login_required
 def update_profile(request):
-    """View to change bio with XSS protection automatically provided by Django."""
+    """Integrated profile update view handling bio and secure file uploads."""
     profile, created = UserProfile.objects.get_or_create(user=request.user)
     if request.method == 'POST':
-        bio = request.POST.get('bio', '')
-        profile.bio = bio
-        profile.save()
-        messages.success(request, 'Profile updated successfully!')
-        return redirect('profile')
+        bio = request.POST.get('bio')
+        avatar = request.FILES.get('avatar')
+        document = request.FILES.get('document')
+        
+        try:
+            if bio is not None:
+                profile.bio = bio
+            if avatar:
+                profile.avatar = avatar
+            if document:
+                profile.document = document
+            
+            # This triggers full model validation including our secure validators
+            profile.full_clean() 
+            profile.save()
+            messages.success(request, 'Profile updated successfully!')
+            return redirect('profile')
+        except Exception as e:
+            messages.error(request, f'Update failed: {str(e)}')
+            
     return render(request, 'accounts/update_profile.html', {'profile': profile})
 
 @login_required

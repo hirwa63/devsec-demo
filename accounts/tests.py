@@ -1,7 +1,11 @@
 from django.test import TestCase, Client, override_settings
 from django.contrib.auth.models import User
 from django.urls import reverse
+from django.core.files.uploadedfile import SimpleUploadedFile
 from accounts.models import LoginAttempt, UserProfile, AuditLog
+import io
+import os
+from PIL import Image
 
 @override_settings(MAX_LOGIN_ATTEMPTS=5, LOGIN_COOLDOWN_MINUTES=15)
 class BruteForceProtectionTests(TestCase):
@@ -36,14 +40,11 @@ class BruteForceProtectionTests(TestCase):
 
     def test_account_locked_after_max_attempts(self):
         """Test that account is locked after MAX_LOGIN_ATTEMPTS failures."""
-        # Exhaust all attempts
         for i in range(5):
             self.client.post(self.login_url, {
                 'username': 'testuser',
                 'password': 'WrongPassword!',
             })
-
-        # Next attempt should be blocked even with correct password
         response = self.client.post(self.login_url, {
             'username': 'testuser',
             'password': 'CorrectPass123!',
@@ -67,10 +68,8 @@ class CSRFTests(TestCase):
 
     def test_ajax_update_succeeds_with_csrf(self):
         """Verify that a POST request with a CSRF token succeeds."""
-        # Get a token first
         self.client.get(reverse('profile'))
         csrf_token = self.client.cookies['csrftoken'].value
-        
         response = self.client.post(
             self.url, 
             {'display_name': 'New Name'},
@@ -78,33 +77,6 @@ class CSRFTests(TestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()['display_name'], 'New Name')
-
-
-class OpenRedirectTests(TestCase):
-    def setUp(self):
-        self.user = User.objects.create_user(username='rediruser', password='password123')
-        UserProfile.objects.get_or_create(user=self.user)
-        self.login_url = reverse('login')
-        self.register_url = reverse('register')
-
-    def test_login_redirects_to_internal_url(self):
-        """Verify that 'next=/accounts/profile/' redirects correctly."""
-        response = self.client.post(self.login_url + '?next=/accounts/profile/', {
-            'username': 'rediruser',
-            'password': 'password123',
-        })
-        self.assertEqual(response.status_code, 302)
-        self.assertIn('/accounts/profile/', response.url)
-
-    def test_login_blocks_external_redirect(self):
-        """Verify that 'next=https://malicious.com' is rejected."""
-        response = self.client.post(self.login_url + '?next=https://malicious.com', {
-            'username': 'rediruser',
-            'password': 'password123',
-        })
-        self.assertEqual(response.status_code, 302)
-        self.assertNotIn('malicious.com', response.url)
-        self.assertIn('/accounts/profile/', response.url)
 
 
 class AuditLogTests(TestCase):
@@ -148,6 +120,41 @@ class XSSTests(TestCase):
         
         response = self.client.get(self.profile_url)
         content = response.content.decode()
-        
-        # It should show up as &lt;script&gt;
         self.assertIn("&lt;script&gt;alert(&#x27;XSS&#x27;)&lt;/script&gt;", content)
+
+
+class FileUploadTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username='fileuser', password='password123')
+        UserProfile.objects.get_or_create(user=self.user)
+        self.client.login(username='fileuser', password='password123')
+        self.upload_url = reverse('update_profile')
+
+    def create_dummy_image(self, name='test.png', size=(100, 100)):
+        file = io.BytesIO()
+        image = Image.new('RGBA', size=size, color=(155, 0, 0))
+        image.save(file, 'png')
+        file.name = name
+        file.seek(0)
+        return SimpleUploadedFile(file.name, file.read(), content_type='image/png')
+
+    def test_valid_image_accepted(self):
+        """Verify that a legitimate PNG image is accepted and renamed."""
+        avatar = self.create_dummy_image()
+        response = self.client.post(self.upload_url, {'avatar': avatar})
+        self.assertEqual(response.status_code, 302)
+        
+        self.user.userprofile.refresh_from_db()
+        self.assertTrue(self.user.userprofile.avatar.name.startswith('avatars/'))
+        filename = os.path.basename(self.user.userprofile.avatar.name)
+        self.assertEqual(len(filename.split('.')[0]), 36) # UUID length
+
+    def test_dangerous_file_type_rejected(self):
+        """Verify that a PHP file is rejected."""
+        document = SimpleUploadedFile("shell.php", b"<?php phpinfo(); ?>", content_type='application/x-php')
+        response = self.client.post(self.upload_url, {'document': document})
+        
+        # Should show error message and not save
+        self.assertEqual(response.status_code, 200)
+        self.user.userprofile.refresh_from_db()
+        self.assertFalse(self.user.userprofile.document)

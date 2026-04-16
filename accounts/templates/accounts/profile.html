@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <<<<<<< HEAD
+<<<<<<< HEAD
 <head>
     <title>Profile</title>
     <style>
@@ -21,6 +22,12 @@
         <p><strong>Role:</strong> {{ profile.role }}</p>
         <p><strong>Display Name:</strong> <span id="display-name-val">{{ profile.display_name|default:"Not set" }}</span></p>
         <p><strong>Bio:</strong> {{ profile.bio|default:"No bio provided." }}</p>
+        {% if profile.avatar %}
+            <p><strong>Avatar:</strong><br><img src="{{ profile.avatar.url }}" alt="Avatar" style="max-width: 150px; border-radius: 50%;"></p>
+        {% endif %}
+        {% if profile.document %}
+            <p><strong>Document:</strong> <a href="{{ profile.document.url }}" target="_blank">View Uploaded Doc</a></p>
+        {% endif %}
         <p><strong>Account Created:</strong> {{ profile.created_at }}</p>
         
         <!-- AJAX PROFILE UPDATE -->
@@ -102,10 +109,13 @@
         </form>
     </div>
 =======
+=======
+>>>>>>> assignment/secure-file-upload-handling
 <head><title>Profile</title></head>
 <body>
     <h1>Profile: {{ profile.user.username }}</h1>
     
+<<<<<<< HEAD
     <h3>Bio</h3>
     <div class="bio-content">
         <!-- FIXED: Removed |safe filter to prevent Stored XSS -->
@@ -119,5 +129,24 @@
         <a href="{% url 'login' %}">Back to Login</a>
     </form>
 >>>>>>> assignment/fix-stored-xss-profile-content
+=======
+    <h3>Avatar</h3>
+    {% if profile.avatar %}
+        <img src="{{ profile.avatar.url }}" alt="Avatar" width="100">
+    {% else %}
+        <p>No avatar uploaded.</p>
+    {% endif %}
+
+    <h3>Document</h3>
+    {% if profile.document %}
+        <p><a href="{{ profile.document.url }}">Download Document</a></p>
+    {% else %}
+        <p>No document uploaded.</p>
+    {% endif %}
+
+    <hr>
+    <p><a href="{% url 'upload_files' %}">Upload Files</a></p>
+    <a href="{% url 'login' %}">Back to Login</a>
+>>>>>>> assignment/secure-file-upload-handling
 </body>
 </html>
