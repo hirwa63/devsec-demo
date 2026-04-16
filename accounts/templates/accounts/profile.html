@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+<<<<<<< HEAD
 <head>
     <title>Profile</title>
     <style>
@@ -84,5 +85,14 @@
             <button type="submit" style="background-color: #dc3545;">Logout</button>
         </form>
     </div>
+=======
+<head><title>Profile</title></head>
+<body>
+    <h1>Welcome to your profile</h1>
+    <form method="post" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button type="submit">Logout</button>
+    </form>
+>>>>>>> assignment/fix-open-redirects
 </body>
 </html>

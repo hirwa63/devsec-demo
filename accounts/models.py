@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+<<<<<<< HEAD
 from django.utils import timezone
 
 class UserProfile(models.Model):
@@ -48,3 +49,10 @@ class LoginAttempt(models.Model):
     def clear_attempts(cls, username):
         """Clear all failed login attempts for a user after successful login."""
         cls.objects.filter(username=username).delete()
+=======
+
+class UserProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='userprofile')
+    def __str__(self):
+        return self.user.username
+>>>>>>> assignment/fix-open-redirects

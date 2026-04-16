@@ -6,6 +6,7 @@ from django.contrib import messages
 from django.conf import settings
 from django.http import JsonResponse
 from django.views.decorators.csrf import ensure_csrf_cookie
+from django.utils.http import url_has_allowed_host_and_scheme
 from .models import UserProfile, LoginAttempt
 
 def get_client_ip(request):
@@ -15,9 +16,24 @@ def get_client_ip(request):
         return x_forwarded_for.split(',')[0].strip()
     return request.META.get('REMOTE_ADDR')
 
+def get_safe_redirect_url(request, redirect_to, fallback_url):
+    """
+    Validate the redirect URL to prevent open redirect vulnerabilities.
+    """
+    if redirect_to and url_has_allowed_host_and_scheme(
+        url=redirect_to,
+        allowed_hosts={request.get_host()},
+        require_https=request.is_secure(),
+    ):
+        return redirect_to
+    return fallback_url
+
 def register(request):
     if request.user.is_authenticated:
         return redirect('profile')
+    
+    redirect_to = request.POST.get('next') or request.GET.get('next')
+
     if request.method == 'POST':
         form = UserCreationForm(request.POST)
         if form.is_valid():
@@ -25,18 +41,21 @@ def register(request):
             UserProfile.objects.create(user=user, role='viewer')
             username = form.cleaned_data.get('username')
             messages.success(request, f'Account created for {username}! Please login.')
-            return redirect('login')
+            
+            safe_url = get_safe_redirect_url(request, redirect_to, 'login')
+            return redirect(safe_url)
         else:
             messages.error(request, 'Registration failed. Please correct the errors.')
     else:
         form = UserCreationForm()
-    return render(request, 'accounts/register.html', {'form': form})
+    return render(request, 'accounts/register.html', {'form': form, 'next': redirect_to})
 
 def login_view(request):
-    """Login view with brute-force protection."""
+    """Login view with brute-force protection and safe redirect validation."""
     if request.user.is_authenticated:
         return redirect('profile')
 
+    redirect_to = request.POST.get('next') or request.GET.get('next')
     max_attempts = getattr(settings, 'MAX_LOGIN_ATTEMPTS', 5)
     cooldown_minutes = getattr(settings, 'LOGIN_COOLDOWN_MINUTES', 15)
 
@@ -57,6 +76,7 @@ def login_view(request):
                 'form': AuthenticationForm(),
                 'is_locked': True,
                 'cooldown_minutes': cooldown_minutes,
+                'next': redirect_to,
             })
 
         if form.is_valid():
@@ -70,7 +90,9 @@ def login_view(request):
                 # Clear failed attempts on successful login
                 LoginAttempt.clear_attempts(username)
                 messages.success(request, f'Welcome back, {username}!')
-                return redirect('profile')
+                
+                safe_url = get_safe_redirect_url(request, redirect_to, 'profile')
+                return redirect(safe_url)
 
         # Authentication failed — record the attempt
         LoginAttempt.record_failure(username, ip_address)
@@ -93,7 +115,7 @@ def login_view(request):
     else:
         form = AuthenticationForm()
 
-    return render(request, 'accounts/login.html', {'form': form})
+    return render(request, 'accounts/login.html', {'form': form, 'next': redirect_to})
 
 def logout_view(request):
     if request.method == 'POST':
