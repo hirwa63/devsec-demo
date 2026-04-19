@@ -2,19 +2,13 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-<<<<<<< HEAD
     path('home/', views.home, name='home'),
-    path('register/', views.register, name='register'),
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
+    path('register/', views.register, name='register'),
     path('profile/', views.profile_view, name='profile'),
     path('profile/update/', views.update_profile, name='update_profile'),
     path('profile/update_ajax/', views.update_display_name, name='update_display_name'),
-    path('update_role/<int:user_id>/', views.update_role, name='update_role'),
-=======
-    path('login/', views.login_view, name='login'),
-    path('register/', views.register, name='register'),
-    path('profile/', views.profile_view, name='profile'),
     path('profile/upload/', views.upload_files, name='upload_files'),
->>>>>>> assignment/secure-file-upload-handling
+    path('update_role/<int:user_id>/', views.update_role, name='update_role'),
 ]
