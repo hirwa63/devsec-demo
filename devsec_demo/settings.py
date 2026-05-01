@@ -123,19 +123,19 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
-# Login URL
+# Login URLs
 LOGIN_URL = 'login'
+LOGIN_REDIRECT_URL = '/accounts/profile/'
 
 # Brute-force protection settings
-# Maximum number of failed login attempts before lockout
 MAX_LOGIN_ATTEMPTS = 5
-# Lockout cooldown period in minutes
 LOGIN_COOLDOWN_MINUTES = 15
 
 # Media files (Uploads)
-MEDIA_URL = 'media/'
+MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 # Security: Limit upload size to 10MB to prevent DoS
@@ -144,6 +144,10 @@ DATA_UPLOAD_MAX_MEMORY_SIZE = 10485760
 # --- PRODUCTION SECURITY SETTINGS ---
 
 if not DEBUG:
+    # Static files served by WhiteNoise in production
+    MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
     # HTTPS & Transport Security
     SECURE_SSL_REDIRECT = os.environ.get('DJANGO_SECURE_SSL_REDIRECT', 'True').lower() == 'true'
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')

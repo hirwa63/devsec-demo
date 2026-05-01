@@ -1,31 +1,28 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Editor Panel</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        .panel { background-color: #f9f9f9; padding: 20px; border-radius: 5px; }
-        .btn { padding: 10px 15px; background-color: #4ecdc4; color: white; border: none; border-radius: 3px; cursor: pointer; text-decoration: none; }
-        .btn:hover { background-color: #3fa99e; }
-    </style>
-</head>
-<body>
-    <a href="{% url 'home' %}">Back to Dashboard</a>
-    
+{% extends "accounts/base.html" %}
+{% block title %}Editor Panel — SecureApp{% endblock %}
+
+{% block content %}
+<div class="page-header">
     <h1>Editor Panel</h1>
-    
-    <div class="panel">
-        <h2>Welcome, {{ profile.user.username }}!</h2>
-        <p>Role: <strong>{{ profile.get_role_display }}</strong></p>
-        
-        <h3>Editor Features:</h3>
-        <ul>
-            <li>Access to content management</li>
-            <li>View and manage user profiles</li>
-            <li>Generate reports</li>
-        </ul>
-        
-        <a href="{% url 'profile' %}" class="btn">View Your Profile</a>
+    <p>Welcome, {{ profile.user.username }}. You have editor-level access.</p>
+</div>
+
+<div class="card">
+    <div class="card-title">Your Access</div>
+    <div class="info-row"><span class="info-label">Username</span><span class="info-value">{{ profile.user.username }}</span></div>
+    <div class="info-row"><span class="info-label">Role</span><span class="info-value"><span class="role-badge role-{{ profile.role }}">{{ profile.get_role_display }}</span></span></div>
+</div>
+
+<div class="card">
+    <div class="card-title">Editor Features</div>
+    <ul style="padding-left:1.25rem;line-height:2">
+        <li>Access to content management</li>
+        <li>View and manage user profiles</li>
+        <li>Generate reports</li>
+    </ul>
+    <div class="flex gap-2 mt-3">
+        <a href="{% url 'profile' %}" class="btn btn-primary btn-sm">View Profile</a>
+        <a href="{% url 'home' %}" class="btn btn-outline btn-sm">Dashboard</a>
     </div>
-</body>
-</html>
+</div>
+{% endblock %}

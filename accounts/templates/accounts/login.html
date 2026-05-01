@@ -1,102 +1,38 @@
-<!DOCTYPE html>
-<html>
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<head>
-    <title>Login</title>
-    <style>
-        body { font-family: Arial; max-width: 600px; margin: 50px auto; }
-        .form-card { border: 1px solid #ddd; padding: 20px; border-radius: 5px; }
-        input { display: block; margin: 10px 0; padding: 8px; width: 95%; }
-        button { background-color: #007bff; color: white; border: none; padding: 10px 15px; cursor: pointer; }
-        a { color: #007bff; text-decoration: none; }
-        .alert-error { background-color: #f8d7da; color: #721c24; padding: 10px; border-radius: 5px; margin-bottom: 15px; }
-        .alert-warning { background-color: #fff3cd; color: #856404; padding: 10px; border-radius: 5px; margin-bottom: 15px; }
-        .alert-success { background-color: #d4edda; color: #155724; padding: 10px; border-radius: 5px; margin-bottom: 15px; }
-        .locked-notice { background-color: #f8d7da; border: 2px solid #dc3545; padding: 15px; border-radius: 5px; margin-bottom: 15px; }
-    </style>
-</head>
-=======
-<head><title>Login</title></head>
->>>>>>> assignment/add-auth-audit-logging
-=======
-<head><title>Login</title></head>
->>>>>>> assignment/fix-stored-xss-profile-content
-<body>
-    <h1>Login</h1>
-    {% if messages %}
-        {% for message in messages %}
-<<<<<<< HEAD
-<<<<<<< HEAD
-            {% if message.tags == 'error' %}
-                <div class="alert-error">{{ message }}</div>
-            {% elif message.tags == 'warning' %}
-                <div class="alert-warning">{{ message }}</div>
-            {% elif message.tags == 'success' %}
-                <div class="alert-success">{{ message }}</div>
-            {% endif %}
-        {% endfor %}
-    {% endif %}
+{% extends "accounts/base.html" %}
+{% block title %}Login — SecureApp{% endblock %}
+{% block page_class %}page-narrow{% endblock %}
 
-    {% if is_locked %}
-        <div class="locked-notice">
-            <strong>Account Temporarily Locked</strong>
-            <p>Too many failed login attempts. Please wait {{ cooldown_minutes }} minutes before trying again.</p>
-        </div>
-    {% endif %}
+{% block content %}
+<div class="page-header">
+    <h1>Sign In</h1>
+    <p>Welcome back. Please log in to your account.</p>
+</div>
 
-    <div class="form-card">
-        <form method="post">
-            {% csrf_token %}
-            {% if next %}
-                <input type="hidden" name="next" value="{{ next }}">
-            {% endif %}
-            {{ form.as_p }}
-            <button type="submit">Login</button>
-        </form>
-    </div>
+{% if is_locked %}
+<div class="alert-locked">
+    <strong>Account Temporarily Locked</strong>
+    <p class="mt-1">Too many failed login attempts. Please wait {{ cooldown_minutes }} minutes before trying again.</p>
+</div>
+{% endif %}
 
-    <div style="margin-top: 15px;">
-        <a href="{% url 'register' %}">Don't have an account? Register</a>
-    </div>
-=======
-=======
->>>>>>> assignment/secure-file-upload-handling
-<head><title>Login</title></head>
-<body>
-    <h1>Login</h1>
+<div class="card">
     <form method="post">
         {% csrf_token %}
-        {{ form.as_p }}
-<<<<<<< HEAD
-        <input type="hidden" name="next" value="{{ next }}">
-        <button type="submit">Login</button>
-    </form>
-    <p><a href="{% url 'register' %}?next={{ next }}">Register</a></p>
->>>>>>> assignment/fix-open-redirects
-=======
-            <p style="color: red;">{{ message }}</p>
-=======
-            <p>{{ message }}</p>
->>>>>>> assignment/fix-stored-xss-profile-content
+        {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+        {% for field in form %}
+            <div class="form-group">
+                {{ field.label_tag }}
+                {{ field }}
+                {% if field.help_text %}<p class="helptext">{{ field.help_text }}</p>{% endif %}
+                {{ field.errors }}
+            </div>
         {% endfor %}
-    {% endif %}
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Login</button>
+        <button type="submit" class="btn btn-primary" style="width:100%;margin-top:.5rem">Sign In</button>
     </form>
-    <p><a href="{% url 'register' %}">Register</a></p>
-<<<<<<< HEAD
->>>>>>> assignment/add-auth-audit-logging
-=======
->>>>>>> assignment/fix-stored-xss-profile-content
-=======
-        <button type="submit">Login</button>
-    </form>
-    <p><a href="{% url 'register' %}">Register</a></p>
->>>>>>> assignment/secure-file-upload-handling
-</body>
-</html>
+</div>
+
+<div class="text-center mt-3">
+    <p class="text-muted">Don't have an account? <a href="{% url 'register' %}">Register</a></p>
+    <p class="text-muted mt-2"><a href="{% url 'password_reset' %}">Forgot your password?</a></p>
+</div>
+{% endblock %}

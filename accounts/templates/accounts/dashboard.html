@@ -1,32 +1,41 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Dashboard</title>
-    <style>
-        body { font-family: Arial; max-width: 600px; margin: 50px auto; }
-        .profile-card { border: 1px solid #ddd; padding: 20px; border-radius: 5px; }
-        a { color: #007bff; text-decoration: none; margin-right: 15px; }
-        form { display: inline; }
-        button { background-color: #dc3545; color: white; border: none; padding: 10px 15px; cursor: pointer; }
-    </style>
-</head>
-<body>
-    <h1>Dashboard</h1>
-    {% if messages %}
-        {% for message in messages %}
-            <p>{{ message }}</p>
-        {% endfor %}
-    {% endif %}
-    <div class="profile-card">
-        <h2>{{ profile.user.username }}</h2>
-        <p><strong>Role:</strong> {{ profile.role }}</p>
+{% extends "accounts/base.html" %}
+{% block title %}Dashboard — SecureApp{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Welcome, {{ profile.user.username }}</h1>
+    <p>Here's an overview of your account.</p>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1.25rem;margin-bottom:1.5rem">
+    <div class="card" style="margin-bottom:0;text-align:center;padding:1.5rem">
+        <div style="font-size:2rem;margin-bottom:.5rem">&#128100;</div>
+        <div style="font-weight:600;margin-bottom:.25rem">{{ profile.user.username }}</div>
+        <div><span class="role-badge role-{{ profile.role }}">{{ profile.get_role_display }}</span></div>
     </div>
-    <div style="margin-top: 20px;">
-        <a href="{% url 'profile' %}">View My Profile</a>
-        <form method="post" action="{% url 'logout' %}">
-            {% csrf_token %}
-            <button type="submit">Logout</button>
-        </form>
+    <div class="card" style="margin-bottom:0;text-align:center;padding:1.5rem">
+        <div style="font-size:2rem;margin-bottom:.5rem">&#128274;</div>
+        <div style="font-weight:600;margin-bottom:.25rem">Secure Session</div>
+        <div class="text-muted" style="font-size:.85rem">CSRF &amp; brute-force protected</div>
     </div>
-</body>
-</html>
+    <div class="card" style="margin-bottom:0;text-align:center;padding:1.5rem">
+        <div style="font-size:2rem;margin-bottom:.5rem">&#128203;</div>
+        <div style="font-weight:600;margin-bottom:.25rem">Audit Logging</div>
+        <div class="text-muted" style="font-size:.85rem">All events are recorded</div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-title">Quick Actions</div>
+    <div class="flex gap-2" style="flex-wrap:wrap">
+        <a href="{% url 'profile' %}" class="btn btn-primary btn-sm">View Profile</a>
+        <a href="{% url 'update_profile' %}" class="btn btn-outline btn-sm">Edit Profile</a>
+        {% if profile.role == 'admin' %}
+            <a href="{% url 'admin_dashboard' %}" class="btn btn-outline btn-sm">Admin Dashboard</a>
+        {% endif %}
+        {% if profile.role == 'editor' or profile.role == 'admin' %}
+            <a href="{% url 'editor_panel' %}" class="btn btn-outline btn-sm">Editor Panel</a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

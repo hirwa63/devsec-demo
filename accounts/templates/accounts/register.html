@@ -1,80 +1,30 @@
-<!DOCTYPE html>
-<html>
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<head>
-    <title>Register</title>
-    <style>
-        body { font-family: Arial; max-width: 600px; margin: 50px auto; }
-        .form-card { border: 1px solid #ddd; padding: 20px; border-radius: 5px; }
-        input { display: block; margin: 10px 0; padding: 8px; width: 95%; }
-        button { background-color: #007bff; color: white; border: none; padding: 10px 15px; cursor: pointer; }
-        a { color: #007bff; text-decoration: none; }
-    </style>
-</head>
-=======
-<head><title>Register</title></head>
->>>>>>> assignment/add-auth-audit-logging
-<body>
-    <h1>Register</h1>
-    {% if messages %}
-        {% for message in messages %}
-            <p>{{ message }}</p>
+{% extends "accounts/base.html" %}
+{% block title %}Register — SecureApp{% endblock %}
+{% block page_class %}page-narrow{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Create Account</h1>
+    <p>Join SecureApp — it only takes a minute.</p>
+</div>
+
+<div class="card">
+    <form method="post">
+        {% csrf_token %}
+        {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+        {% for field in form %}
+            <div class="form-group">
+                {{ field.label_tag }}
+                {{ field }}
+                {% if field.help_text %}<p class="helptext">{{ field.help_text }}</p>{% endif %}
+                {{ field.errors }}
+            </div>
         {% endfor %}
-    {% endif %}
-<<<<<<< HEAD
+        <button type="submit" class="btn btn-primary" style="width:100%;margin-top:.5rem">Create Account</button>
+    </form>
+</div>
 
-    <div class="form-card">
-        <form method="post">
-            {% csrf_token %}
-            {% if next %}
-                <input type="hidden" name="next" value="{{ next }}">
-            {% endif %}
-            {{ form.as_p }}
-            <button type="submit">Register</button>
-        </form>
-    </div>
-
-    <div style="margin-top: 15px;">
-        <a href="{% url 'login' %}">Already have an account? Login</a>
-    </div>
-=======
-=======
->>>>>>> assignment/fix-stored-xss-profile-content
-=======
->>>>>>> assignment/secure-file-upload-handling
-<head><title>Register</title></head>
-<body>
-    <h1>Register</h1>
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-<<<<<<< HEAD
-<<<<<<< HEAD
-        <input type="hidden" name="next" value="{{ next }}">
-        <button type="submit">Register</button>
-    </form>
-    <p><a href="{% url 'login' %}?next={{ next }}">Login</a></p>
->>>>>>> assignment/fix-open-redirects
-=======
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Register</button>
-    </form>
-    <p><a href="{% url 'login' %}">Login</a></p>
->>>>>>> assignment/add-auth-audit-logging
-=======
-        <button type="submit">Register</button>
-    </form>
-    <p><a href="{% url 'login' %}">Login</a></p>
->>>>>>> assignment/fix-stored-xss-profile-content
-=======
-        <button type="submit">Register</button>
-    </form>
-    <p><a href="{% url 'login' %}">Login</a></p>
->>>>>>> assignment/secure-file-upload-handling
-</body>
-</html>
+<div class="text-center mt-3">
+    <p class="text-muted">Already have an account? <a href="{% url 'login' %}">Sign in</a></p>
+</div>
+{% endblock %}

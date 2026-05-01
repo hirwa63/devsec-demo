@@ -1,152 +1,115 @@
-<!DOCTYPE html>
-<html>
-<<<<<<< HEAD
-<<<<<<< HEAD
-<head>
-    <title>Profile</title>
-    <style>
-        body { font-family: Arial; max-width: 600px; margin: 50px auto; }
-        .profile-card { border: 1px solid #ddd; padding: 20px; border-radius: 5px; margin-bottom: 20px; }
-        button { background-color: #007bff; color: white; border: none; padding: 10px 15px; cursor: pointer; }
-        a { color: #007bff; text-decoration: none; }
-        .edit-section { padding-top: 20px; border-top: 1px dashed #ccc; }
-        .log-section { margin-top: 30px; }
-        .log-list { list-style: none; padding: 0; font-size: 0.9em; }
-        .log-item { padding: 5px 0; border-bottom: 1px solid #eee; }
-    </style>
-</head>
-<body>
+{% extends "accounts/base.html" %}
+{% block title %}Profile — {{ profile.user.username }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
     <h1>User Profile</h1>
-    <div class="profile-card">
-        <p><strong>Username:</strong> {{ profile.user.username }}</p>
-        <p><strong>Role:</strong> {{ profile.role }}</p>
-        <p><strong>Display Name:</strong> <span id="display-name-val">{{ profile.display_name|default:"Not set" }}</span></p>
-        <p><strong>Bio:</strong> {{ profile.bio|default:"No bio provided." }}</p>
+    <p>Manage your account details and view security activity.</p>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
+
+<div>
+    <div class="card">
+        <div class="card-title">Account Info</div>
+        <div class="info-row"><span class="info-label">Username</span><span class="info-value">{{ profile.user.username }}</span></div>
+        <div class="info-row"><span class="info-label">Role</span><span class="info-value"><span class="role-badge role-{{ profile.role }}">{{ profile.get_role_display }}</span></span></div>
+        <div class="info-row"><span class="info-label">Display Name</span><span class="info-value" id="display-name-val">{{ profile.display_name|default:"Not set" }}</span></div>
+        <div class="info-row"><span class="info-label">Bio</span><span class="info-value">{{ profile.bio|default:"No bio provided." }}</span></div>
+        <div class="info-row"><span class="info-label">Member Since</span><span class="info-value">{{ profile.created_at|date:"M j, Y" }}</span></div>
         {% if profile.avatar %}
-            <p><strong>Avatar:</strong><br><img src="{{ profile.avatar.url }}" alt="Avatar" style="max-width: 150px; border-radius: 50%;"></p>
+        <div class="info-row"><span class="info-label">Avatar</span><span class="info-value"><img src="{{ profile.avatar.url }}" alt="Avatar" style="width:60px;height:60px;border-radius:50%;object-fit:cover;"></span></div>
         {% endif %}
         {% if profile.document %}
-            <p><strong>Document:</strong> <a href="{{ profile.document.url }}" target="_blank">View Uploaded Doc</a></p>
+        <div class="info-row"><span class="info-label">Document</span><span class="info-value"><a href="{{ profile.document.url }}" target="_blank">View Document</a></span></div>
         {% endif %}
-        <p><strong>Account Created:</strong> {{ profile.created_at }}</p>
-        
-        <!-- AJAX PROFILE UPDATE -->
-        <div class="edit-section">
-            <h3>Update Display Name (AJAX)</h3>
-            <input type="text" id="new-display-name" placeholder="Enter new name" style="padding: 8px; width: 200px;">
-            <button onclick="updateDisplayName()">Update</button>
-            <p id="status-msg"></p>
+    </div>
+
+    <div class="card">
+        <div class="card-title">Update Display Name</div>
+        <div class="flex gap-2">
+            <input type="text" id="new-display-name" placeholder="Enter new display name" style="margin-bottom:0">
+            <button class="btn btn-outline btn-sm" onclick="updateDisplayName()">Update</button>
         </div>
+        <p id="status-msg" class="mt-2 text-muted" style="font-size:.85rem"></p>
     </div>
 
-    <div class="profile-card log-section">
-        <h3>Recent Security Activity</h3>
-        <ul class="log-list">
-            {% for log in logs %}
-                <li class="log-item">
-                    <strong>[{{ log.timestamp|date:"Y-m-d H:i" }}]</strong> 
-                    {{ log.get_event_type_display }}: {{ log.details }}
-                </li>
-            {% empty %}
-                <li>No activity recorded.</li>
-            {% endfor %}
-        </ul>
+    <div class="flex gap-2 mt-2">
+        <a href="{% url 'update_profile' %}" class="btn btn-primary btn-sm">Edit Profile</a>
+        <a href="{% url 'home' %}" class="btn btn-outline btn-sm">Dashboard</a>
+    </div>
+</div>
+
+<div>
+    <div class="card">
+        <div class="card-title">Recent Security Activity</div>
+        {% for log in logs %}
+            <div class="log-item">
+                <div class="log-time">{{ log.timestamp|date:"Y-m-d H:i" }}</div>
+                <div><strong>{{ log.get_event_type_display }}</strong>{% if log.details %} — {{ log.details }}{% endif %}</div>
+            </div>
+        {% empty %}
+            <p class="text-muted">No activity recorded yet.</p>
+        {% endfor %}
     </div>
 
-    <script>
-        function getCookie(name) {
-            let cookieValue = null;
-            if (document.cookie && document.cookie !== '') {
-                const cookies = document.cookie.split(';');
-                for (let i = 0; i < cookies.length; i++) {
-                    const cookie = cookies[i].trim();
-                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                        break;
-                    }
-                }
-            }
-            return cookieValue;
-        }
-
-        async function updateDisplayName() {
-            const nameInput = document.getElementById('new-display-name');
-            const statusMsg = document.getElementById('status-msg');
-            const nameVal = nameInput.value;
-            const csrftoken = getCookie('csrftoken');
-
-            try {
-                const response = await fetch("{% url 'update_display_name' %}", {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                        'X-CSRFToken': csrftoken
-                    },
-                    body: `display_name=${encodeURIComponent(nameVal)}`
-                });
-
-                const data = await response.json();
-                if (response.ok) {
-                    document.getElementById('display-name-val').innerText = data.display_name;
-                    statusMsg.innerText = "Updated successfully!";
-                    statusMsg.style.color = "green";
-                } else {
-                    statusMsg.innerText = `Error: ${data.message || 'Forbidden'}`;
-                    statusMsg.style.color = "red";
-                }
-            } catch (error) {
-                statusMsg.innerText = "Request failed.";
-                statusMsg.style.color = "red";
-            }
-        }
-    </script>
-
-    <div style="margin-top: 20px;">
-        <p><a href="{% url 'home' %}">Back to Dashboard</a></p>
-        <form action="{% url 'logout' %}" method="post">
+    {% if user.userprofile.role == 'admin' %}
+    <div class="card">
+        <div class="card-title">Admin Actions</div>
+        <p class="text-muted" style="margin-bottom:1rem;font-size:.875rem">Change this user's role:</p>
+        <form method="post" action="{% url 'update_role' profile.user.id %}" class="flex gap-2">
             {% csrf_token %}
-            <button type="submit" style="background-color: #dc3545;">Logout</button>
+            <select name="role" style="margin-bottom:0">
+                <option value="viewer" {% if profile.role == 'viewer' %}selected{% endif %}>Viewer</option>
+                <option value="editor" {% if profile.role == 'editor' %}selected{% endif %}>Editor</option>
+                <option value="admin"  {% if profile.role == 'admin'  %}selected{% endif %}>Admin</option>
+            </select>
+            <button type="submit" class="btn btn-primary btn-sm">Save</button>
         </form>
     </div>
-=======
-=======
->>>>>>> assignment/secure-file-upload-handling
-<head><title>Profile</title></head>
-<body>
-    <h1>Profile: {{ profile.user.username }}</h1>
-    
-<<<<<<< HEAD
-    <h3>Bio</h3>
-    <div class="bio-content">
-        <!-- FIXED: Removed |safe filter to prevent Stored XSS -->
-        <!-- Django auto-escapes this by default, ensuring any script tags are rendered as plain text -->
-        {{ profile.bio }}
-    </div>
-
-    <hr>
-    <p><a href="{% url 'update_profile' %}">Update Bio</a></p>
-    <form method="post" action="{% url 'login' %}"> <!-- actually just redirecting for now -->
-        <a href="{% url 'login' %}">Back to Login</a>
-    </form>
->>>>>>> assignment/fix-stored-xss-profile-content
-=======
-    <h3>Avatar</h3>
-    {% if profile.avatar %}
-        <img src="{{ profile.avatar.url }}" alt="Avatar" width="100">
-    {% else %}
-        <p>No avatar uploaded.</p>
     {% endif %}
+</div>
 
-    <h3>Document</h3>
-    {% if profile.document %}
-        <p><a href="{{ profile.document.url }}">Download Document</a></p>
-    {% else %}
-        <p>No document uploaded.</p>
-    {% endif %}
+</div>
+{% endblock %}
 
-    <hr>
-    <p><a href="{% url 'upload_files' %}">Upload Files</a></p>
-    <a href="{% url 'login' %}">Back to Login</a>
->>>>>>> assignment/secure-file-upload-handling
-</body>
-</html>
+{% block extra_js %}
+<script>
+function getCookie(name) {
+    let val = null;
+    if (document.cookie) {
+        document.cookie.split(';').forEach(c => {
+            c = c.trim();
+            if (c.startsWith(name + '=')) val = decodeURIComponent(c.slice(name.length + 1));
+        });
+    }
+    return val;
+}
+
+async function updateDisplayName() {
+    const input = document.getElementById('new-display-name');
+    const status = document.getElementById('status-msg');
+    const csrftoken = getCookie('csrftoken');
+    try {
+        const res = await fetch("{% url 'update_display_name' %}", {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': csrftoken },
+            body: `display_name=${encodeURIComponent(input.value)}`
+        });
+        const data = await res.json();
+        if (res.ok) {
+            document.getElementById('display-name-val').innerText = data.display_name;
+            status.innerText = 'Updated successfully!';
+            status.style.color = 'var(--success)';
+            input.value = '';
+        } else {
+            status.innerText = `Error: ${data.message || 'Forbidden'}`;
+            status.style.color = 'var(--danger)';
+        }
+    } catch {
+        status.innerText = 'Request failed.';
+        status.style.color = 'var(--danger)';
+    }
+}
+</script>
+{% endblock %}

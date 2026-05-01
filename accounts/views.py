@@ -9,6 +9,7 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 from django.utils.http import url_has_allowed_host_and_scheme
 from .models import UserProfile, LoginAttempt, AuditLog
 from .utils import record_audit_log, get_client_ip
+from .decorators import admin_required, editor_required
 
 def get_safe_redirect_url(request, redirect_to, fallback_url):
     """
@@ -198,22 +199,58 @@ def update_role(request, user_id):
     from django.contrib.auth.models import User
     target_user = get_object_or_404(User, pk=user_id)
     target_profile, created = UserProfile.objects.get_or_create(user=target_user)
-    
+
     if request.method == 'POST':
         old_role = target_profile.role
         new_role = request.POST.get('role')
         if new_role in [choice[0] for choice in UserProfile.ROLE_CHOICES]:
             target_profile.role = new_role
             target_profile.save()
-            
-            # AUDIT LOG: Privilege Change
+
             record_audit_log(
-                'privilege_change', 
-                request, 
-                user=request.user, 
+                'privilege_change',
+                request,
+                user=request.user,
                 details=f"Changed user {target_user.username} role: {old_role} -> {new_role}"
             )
-            
             messages.success(request, f"Updated {target_user.username} to {new_role}")
-    
-    return redirect('profile')
+
+    return redirect('admin_dashboard')
+
+
+@login_required
+def profile_view_by_id(request, user_id):
+    """View a user profile by ID — IDOR protected."""
+    try:
+        profile = UserProfile.objects.get(user_id=user_id)
+    except UserProfile.DoesNotExist:
+        messages.error(request, 'User profile not found.')
+        return redirect('profile')
+
+    is_own = request.user.id == user_id
+    is_admin_user = request.user.userprofile.role == 'admin'
+
+    if not (is_own or is_admin_user):
+        messages.error(request, 'You do not have permission to view this profile.')
+        return redirect('profile')
+
+    logs = AuditLog.objects.filter(user=profile.user)[:10]
+    return render(request, 'accounts/profile.html', {'profile': profile, 'logs': logs})
+
+
+@admin_required
+def admin_dashboard(request):
+    """Admin-only dashboard showing all users with role management."""
+    from django.contrib.auth.models import User
+    users = UserProfile.objects.select_related('user').all()
+    return render(request, 'accounts/admin_dashboard.html', {
+        'users': users,
+        'role_choices': UserProfile.ROLE_CHOICES,
+    })
+
+
+@editor_required
+def editor_panel(request):
+    """Editor panel for users with editor or admin role."""
+    profile, _ = UserProfile.objects.get_or_create(user=request.user)
+    return render(request, 'accounts/editor_panel.html', {'profile': profile})
